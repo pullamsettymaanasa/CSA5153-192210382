@@ -1,0 +1,31 @@
+import string
+import random
+
+def generate_key():
+    letters = string.ascii_lowercase
+    shuffled_letters = list(letters)
+    random.shuffle(shuffled_letters)
+    return ''.join(shuffled_letters)
+
+def encrypt(text, key):
+    letters = string.ascii_lowercase
+    key_map = {letters[i]: key[i] for i in range(26)}
+    encrypted_text = ''.join([key_map[char] if char in key_map else char for char in text.lower()])
+    return encrypted_text
+
+def decrypt(text, key):
+    letters = string.ascii_lowercase
+    key_map = {key[i]: letters[i] for i in range(26)}
+    decrypted_text = ''.join([key_map[char] if char in key_map else char for char in text.lower()])
+    return decrypted_text
+
+key = generate_key()
+message = "Hello, World!"
+print(f"Generated Key: {key}")
+
+encrypted_message = encrypt(message, key)
+decrypted_message = decrypt(encrypted_message, key)
+
+print(f"Original: {message}")
+print(f"Encrypted: {encrypted_message}")
+print(f"Decrypted: {decrypted_message}")
