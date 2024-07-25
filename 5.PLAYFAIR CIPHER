@@ -1,0 +1,84 @@
+def generate_playfair_key(key):
+    key = key.upper().replace('J', 'I')
+    matrix = []
+    used_chars = set()
+
+    for char in key:
+        if char not in used_chars and char.isalpha():
+            matrix.append(char)
+            used_chars.add(char)
+
+    for char in 'ABCDEFGHIKLMNOPQRSTUVWXYZ':
+        if char not in used_chars:
+            matrix.append(char)
+            used_chars.add(char)
+
+    return [matrix[i:i + 5] for i in range(0, 25, 5)]
+
+def format_plaintext(plaintext):
+    plaintext = plaintext.upper().replace('J', 'I')
+    formatted_text = ''
+    i = 0
+
+    while i < len(plaintext):
+        char1 = plaintext[i]
+        if i + 1 < len(plaintext):
+            char2 = plaintext[i + 1]
+        else:
+            char2 = 'X'
+
+        if char1 == char2:
+            formatted_text += char1 + 'X'
+            i += 1
+        else:
+            formatted_text += char1 + char2
+            i += 2
+
+    if len(formatted_text) % 2 != 0:
+        formatted_text += 'X'
+
+    return formatted_text
+
+def find_position(matrix, char):
+    for row in range(5):
+        for col in range(5):
+            if matrix[row][col] == char:
+                return row, col
+    return None
+
+def playfair_encrypt_decrypt(text, key_matrix, encrypt=True):
+    step = 1 if encrypt else -1
+    result = ''
+
+    for i in range(0, len(text), 2):
+        char1 = text[i]
+        char2 = text[i + 1]
+
+        row1, col1 = find_position(key_matrix, char1)
+        row2, col2 = find_position(key_matrix, char2)
+
+        if row1 == row2:
+            result += key_matrix[row1][(col1 + step) % 5]
+            result += key_matrix[row2][(col2 + step) % 5]
+        elif col1 == col2:
+            result += key_matrix[(row1 + step) % 5][col1]
+            result += key_matrix[(row2 + step) % 5][col2]
+        else:
+            result += key_matrix[row1][col2]
+            result += key_matrix[row2][col1]
+
+    return result
+
+
+key = "KEYWORD"
+message = "HELLO"
+
+key_matrix = generate_playfair_key(key)
+formatted_message = format_plaintext(message)
+encrypted_message = playfair_encrypt_decrypt(formatted_message, key_matrix, encrypt=True)
+decrypted_message = playfair_encrypt_decrypt(encrypted_message, key_matrix, encrypt=False)
+
+print(f"Original: {message}")
+print(f"Formatted: {formatted_message}")
+print(f"Encrypted: {encrypted_message}")
+print(f"Decrypted: {decrypted_message}")
