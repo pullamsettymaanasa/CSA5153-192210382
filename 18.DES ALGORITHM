@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+// Constants for DES key permutation and shifts
+const uint8_t PC1[] = {
+    57, 49, 41, 33, 25, 17,  9,
+    1, 58, 50, 42, 34, 26, 18,
+    10,  2, 59, 51, 43, 35, 27,
+    19, 11,  3, 60, 52, 44, 36,
+    63, 55, 47, 39, 31, 23, 15,
+    7, 62, 54, 46, 38, 30, 22,
+    14,  6, 61, 53, 45, 37, 29,
+    21, 13,  5, 28, 20, 12,  4
+};
+
+const uint8_t PC2[] = {
+    14, 17, 11, 24,  1,  5,  3, 28,
+    15,  6, 21, 10, 23, 19, 12,  4,
+    26,  8, 16,  7, 27, 20, 13,  2,
+    41, 52, 31, 37, 47, 55, 30, 40,
+    51, 45, 33, 48, 44, 49, 39, 56,
+    34, 53, 46, 42, 50, 36, 29, 32
+};
+
+const uint8_t SHIFTS[] = {1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2};
+
+// Function prototypes
+void permute(uint64_t input, const uint8_t *table, int table_size, uint64_t *output);
+void generateSubkeys(const uint64_t key, uint64_t subkeys[16]);
+
+int main() {
+    uint64_t key = 0x133457799BBCDFF1; // Example 64-bit key (56 bits used)
+    uint64_t subkeys[16];
+
+    generateSubkeys(key, subkeys);
+
+    printf("Generated subkeys:\n");
+    for (int i = 0; i < 16; i++) {
+        printf("K%d: %016lX\n", i + 1, subkeys[i]);
+    }
+
+    return 0;
+}
+
+void permute(uint64_t input, const uint8_t *table, int table_size, uint64_t *output) {
+    *output = 0;
+    for (int i = 0; i < table_size; i++) {
+        if (input & (1ULL << (64 - table[i]))) {
+            *output |= (1ULL << (table_size - 1 - i));
+        }
+    }
+}
+
+void generateSubkeys(const uint64_t key, uint64_t subkeys[16]) {
+    uint64_t permuted_key, c, d, cd;
+    
+    // Initial permutation (PC1) to split the key into two 28-bit halves
+    permute(key, PC1, 56, &permuted_key);
+    c = (permuted_key >> 28) & 0xFFFFFFF;
+    d = permuted_key & 0xFFFFFFF;
+    
+    // Generate 16 subkeys
+    for (int round = 0; round < 16; round++) {
+        // Shift C and D
+        int shift = SHIFTS[round];
+        c = ((c << shift) | (c >> (28 - shift))) & 0xFFFFFFF;
+        d = ((d << shift) | (d >> (28 - shift))) & 0xFFFFFFF;
+        
+        // Combine C and D
+        cd = (c << 28) | d;
+
+        // Permutation (PC2) to generate the subkey
+        permute(cd, PC2, 48, &subkeys[round]);
+    }
+}
