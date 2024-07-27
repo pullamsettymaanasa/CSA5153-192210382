@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <openssl/des.h>  // OpenSSL DES library
+
+// CBC Encryption function
+void cbc_encrypt(const uint8_t *plaintext, uint8_t *ciphertext, size_t length, 
+                 const DES_key_schedule *ks1, const DES_key_schedule *ks2, const DES_key_schedule *ks3, 
+                 const uint8_t *iv) {
+    uint8_t block[8];
+    uint8_t iv_copy[8];
+    size_t i;
+
+    // Copy IV to use for CBC mode
+    memcpy(iv_copy, iv, 8);
+
+    for (i = 0; i < length; i += 8) {
+        // Copy plaintext block
+        memcpy(block, plaintext + i, 8);
+
+        // XOR block with previous ciphertext block (or IV for the first block)
+        for (int j = 0; j < 8; ++j) {
+            block[j] ^= iv_copy[j];
+        }
+
+        // Encrypt block with 3DES
+        DES_ecb3_encrypt((DES_cblock *)block, (DES_cblock *)block, ks1, ks2, ks3, DES_ENCRYPT);
+
+        // Copy ciphertext block to output
+        memcpy(ciphertext + i, block, 8);
+
+        // Update IV to current ciphertext block
+        memcpy(iv_copy, ciphertext + i, 8);
+    }
+}
+
+int main() {
+    // Example plaintext and key
+    uint8_t plaintext[] = "This is a test.";
+    size_t length = sizeof(plaintext);
+
+    // Ensure length is a multiple of 8 for this example
+    length = (length + 7) / 8 * 8;
+
+    uint8_t ciphertext[length];
+    uint8_t iv[8] = {0}; // Initialization vector (should be random in practice)
+
+    DES_cblock key1 = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF}; // Key 1
+    DES_cblock key2 = {0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10}; // Key 2
+    DES_cblock key3 = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88}; // Key 3
+
+    DES_key_schedule ks1, ks2, ks3;
+    DES_set_key_unchecked(&key1, &ks1);
+    DES_set_key_unchecked(&key2, &ks2);
+    DES_set_key_unchecked(&key3, &ks3);
+
+    // Perform CBC encryption with 3DES
+    cbc_encrypt(plaintext, ciphertext, length, &ks1, &ks2, &ks3, iv);
+
+    // Print ciphertext in hex
+    printf("Ciphertext (hex):\n");
+    for (size_t i = 0; i < length; ++i) {
+        printf("%02X", ciphertext[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
