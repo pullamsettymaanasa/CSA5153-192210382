@@ -1,0 +1,53 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+
+void caesarCipher(char* text, int shift) {
+    int i;
+    char ch;
+
+    for (i = 0; text[i] != '\0'; ++i) {
+        ch = text[i];
+
+        if (isalpha(ch)) {
+           
+            if (isupper(ch)) {
+                ch = (ch - 'A' + shift) % 26 + 'A';
+            }
+           
+            else {
+                ch = (ch - 'a' + shift) % 26 + 'a';
+            }
+        }
+
+        text[i] = ch;
+    }
+}
+
+int main() {
+    char text[100];
+    int shift;
+
+   
+    printf("Enter a message to encrypt: ");
+    gets(text);
+
+
+    printf("Enter the shift value (1-25): ");
+    scanf("%d", &shift);
+
+    // Ensure the shift value is within the valid range
+    if (shift < 1 || shift > 25) {
+        printf("Invalid shift value! Please enter a value between 1 and 25.\n");
+        return 1;
+    }
+
+    // Encrypt the text using the Caesar cipher
+    caesarCipher(text, shift);
+
+    // Output the encrypted text
+    printf("Encrypted message: %s\n", text);
+
+    return 0;
+}
