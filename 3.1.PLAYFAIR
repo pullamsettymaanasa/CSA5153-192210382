@@ -1,0 +1,115 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 5
+
+void generateMatrix(char key[], char matrix[SIZE][SIZE]) {
+    int i, j, k, n = 0;
+    int used[26] = {0};
+    
+    // Fill the matrix with the key
+    for (i = 0; i < strlen(key); i++) {
+        char ch = toupper(key[i]);
+        if (ch == 'J') ch = 'I'; // Treat 'J' as 'I'
+        if (!used[ch - 'A'] && isalpha(ch)) {
+            matrix[n / SIZE][n % SIZE] = ch;
+            used[ch - 'A'] = 1;
+            n++;
+        }
+    }
+    
+    // Fill the rest of the matrix with remaining letters
+    for (ch = 'A'; ch <= 'Z'; ch++) {
+        if (ch == 'J') continue; // Skip 'J'
+        if (!used[ch - 'A']) {
+            matrix[n / SIZE][n % SIZE] = ch;
+            used[ch - 'A'] = 1;
+            n++;
+        }
+    }
+}
+
+void printMatrix(char matrix[SIZE][SIZE]) {
+    int i, j;
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            printf("%c ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void findPosition(char matrix[SIZE][SIZE], char ch, int *row, int *col) {
+    int i, j;
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            if (matrix[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+void playfairEncrypt(char plaintext[], char key[]) {
+    char matrix[SIZE][SIZE];
+    generateMatrix(key, matrix);
+    
+    printf("Playfair Cipher Key Matrix:\n");
+    printMatrix(matrix);
+    
+    int length = strlen(plaintext);
+    char ciphertext[100] = {0};
+    int i, row1, col1, row2, col2;
+    
+    // Process the plaintext in pairs
+    for (i = 0; i < length; i += 2) {
+        char first = toupper(plaintext[i]);
+        char second = toupper(plaintext[i + 1]);
+        
+        if (first == 'J') first = 'I'; // Treat 'J' as 'I'
+        if (second == 'J') second = 'I'; // Treat 'J' as 'I'
+        
+        if (first == second) {
+            second = 'X'; // Add a filler 'X' if both letters are the same
+        }
+        
+        findPosition(matrix, first, &row1, &col1);
+        findPosition(matrix, second, &row2, &col2);
+        
+        if (row1 == row2) {
+            // Same row
+            ciphertext[i] = matrix[row1][(col1 + 1) % SIZE];
+            ciphertext[i + 1] = matrix[row2][(col2 + 1) % SIZE];
+        } else if (col1 == col2) {
+            // Same column
+            ciphertext[i] = matrix[(row1 + 1) % SIZE][col1];
+            ciphertext[i + 1] = matrix[(row2 + 1) % SIZE][col2];
+        } else {
+            // Rectangle swap
+            ciphertext[i] = matrix[row1][col2];
+            ciphertext[i + 1] = matrix[row2][col1];
+        }
+    }
+    
+    printf("Encrypted message: %s\n", ciphertext);
+}
+
+int main() {
+    char plaintext[100], key[100];
+    
+    // Input the plaintext to be encrypted
+    printf("Enter a message to encrypt: ");
+    gets(plaintext);
+    
+    // Input the key
+    printf("Enter the key: ");
+    gets(key);
+    
+    // Encrypt the plaintext using the Playfair cipher
+    playfairEncrypt(plaintext, key);
+    
+    return 0;
+}
