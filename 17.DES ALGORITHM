@@ -1,0 +1,78 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+// Constants for DES key generation and permutations
+#define DES_KEY_SIZE 56
+#define DES_BLOCK_SIZE 64
+#define DES_ROUNDS 16
+
+// Example S-boxes and permutation tables (actual values needed for real implementation)
+// For a complete implementation, these values must be included.
+const uint8_t PC1[] = {/* Permutation Choice 1 table */};
+const uint8_t PC2[] = {/* Permutation Choice 2 table */};
+const uint8_t SHIFTS[] = {/* Shift schedule */};
+const uint8_t IP[] = {/* Initial Permutation table */};
+const uint8_t IP_INV[] = {/* Inverse Initial Permutation table */};
+const uint8_t E[] = {/* Expansion table */};
+const uint8_t P[] = {/* P4 table */};
+const uint8_t S_BOXES[8][4][16] = {/* S-boxes */};
+const uint8_t PERM[] = {/* Permutation table */};
+
+// Function prototypes
+void permute(uint64_t input, const uint8_t *table, int table_size, uint64_t *output);
+void generateSubkeys(const uint64_t key, uint64_t subkeys[DES_ROUNDS]);
+void desRound(uint64_t *left, uint64_t *right, uint64_t subkey);
+void desDecrypt(const uint64_t ciphertext, const uint64_t subkeys[DES_ROUNDS], uint64_t *plaintext);
+
+int main() {
+    // Example key and ciphertext (binary representation)
+    uint64_t key = 0x133457799BBCDFF1; // Example 64-bit key (56 bits used)
+    uint64_t ciphertext = 0x85E813540F0AB405; // Example ciphertext
+    uint64_t plaintext;
+
+    uint64_t subkeys[DES_ROUNDS];
+    generateSubkeys(key, subkeys);
+
+    desDecrypt(ciphertext, subkeys, &plaintext);
+
+    printf("Decrypted plaintext: %016lX\n", plaintext);
+
+    return 0;
+}
+
+void permute(uint64_t input, const uint8_t *table, int table_size, uint64_t *output) {
+    // Perform permutation based on the provided table
+    // For brevity, this function is not fully implemented
+}
+
+void generateSubkeys(const uint64_t key, uint64_t subkeys[DES_ROUNDS]) {
+    // Generate subkeys for each round
+    // For brevity, this function is not fully implemented
+}
+
+void desRound(uint64_t *left, uint64_t *right, uint64_t subkey) {
+    // Perform a single DES round
+    // For brevity, this function is not fully implemented
+}
+
+void desDecrypt(const uint64_t ciphertext, const uint64_t subkeys[DES_ROUNDS], uint64_t *plaintext) {
+    uint64_t left = 0, right = 0;
+    uint64_t permuted_input;
+
+    // Initial permutation
+    permute(ciphertext, IP, DES_BLOCK_SIZE, &permuted_input);
+    left = (permuted_input >> 32) & 0xFFFFFFFF;
+    right = permuted_input & 0xFFFFFFFF;
+
+    // Perform 16 rounds of DES decryption with subkeys in reverse order
+    for (int i = DES_ROUNDS - 1; i >= 0; i--) {
+        desRound(&left, &right, subkeys[i]);
+    }
+
+    // Final permutation
+    uint64_t final_permuted;
+    permute((left << 32) | right, IP_INV, DES_BLOCK_SIZE, &final_permuted);
+
+    *plaintext = final_permuted;
+}
