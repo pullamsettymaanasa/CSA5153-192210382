@@ -1,0 +1,74 @@
+#include <stdio.h>
+
+// Function to compute the greatest common divisor
+int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+// Function to find modular inverse of a under modulo m
+int modInverse(int a, int m) {
+    a = a % m;
+    for (int x = 1; x < m; x++) {
+        if ((a * x) % m == 1) {
+            return x;
+        }
+    }
+    return -1;
+}
+
+// Function to decrypt using affine cipher
+char affineDecrypt(char c, int a, int b) {
+    if (isalpha(c)) {
+        char offset = isupper(c) ? 'A' : 'a';
+        // Find modular inverse of a
+        int a_inv = modInverse(a, 26);
+        return ((a_inv * ((c - offset - b + 26) % 26)) % 26 + offset);
+    }
+    return c; // Non-alphabetic characters remain unchanged
+}
+
+// Function to solve the equations and find a and b
+void solveAffineCipher(int c1, int p1, int c2, int p2, int* a, int* b) {
+    int a_inv, b_temp;
+    
+    // Calculate a using (c2 - c1) = a(p2 - p1) mod 26
+    *a = (c2 - c1 + 26) % 26;
+    b_temp = (p2 - p1 + 26) % 26;
+    a_inv = modInverse(b_temp, 26);
+    *a = (*a * a_inv) % 26;
+
+    // Calculate b using one of the original equations
+    *b = (c1 - (*a * p1) % 26 + 26) % 26;
+}
+
+int main() {
+    int c1 = 1; // 'B' is the most frequent letter in ciphertext, corresponding to 1
+    int c2 = 20; // 'U' is the second most frequent letter in ciphertext, corresponding to 20
+    int p1 = 4; // 'E' is the most frequent letter in plaintext, corresponding to 4
+    int p2 = 19; // 'T' is the second most frequent letter in plaintext, corresponding to 19
+    int a, b;
+
+    // Solve for a and b
+    solveAffineCipher(c1, p1, c2, p2, &a, &b);
+
+    printf("Solved values: a = %d, b = %d\n", a, b);
+
+    // Example ciphertext
+    char ciphertext[] = "B UZZY WBRZUS!";
+    char decryptedtext[100];
+
+    // Decrypt the ciphertext
+    for (int i = 0; ciphertext[i] != '\0'; i++) {
+        decryptedtext[i] = affineDecrypt(ciphertext[i], a, b);
+    }
+    decryptedtext[strlen(ciphertext)] = '\0';
+
+    printf("Decrypted message: %s\n", decryptedtext);
+
+    return 0;
+}
