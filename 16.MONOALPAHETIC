@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define ALPHABET_SIZE 26
+#define TOP_N 10
+#define MAX_LEN 1000
+
+// Function to calculate the frequency of each letter in the ciphertext
+void calculateFrequency(char *text, int *frequency) {
+    memset(frequency, 0, ALPHABET_SIZE * sizeof(int));
+    for (int i = 0; text[i] != '\0'; i++) {
+        if (isalpha(text[i])) {
+            int index = toupper(text[i]) - 'A';
+            frequency[index]++;
+        }
+    }
+}
+
+// Function to sort the frequency array in descending order
+void sortFrequency(int *frequency, char *sortedLetters) {
+    int freqIndex[ALPHABET_SIZE];
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        freqIndex[i] = i;
+    }
+
+    for (int i = 0; i < ALPHABET_SIZE - 1; i++) {
+        for (int j = i + 1; j < ALPHABET_SIZE; j++) {
+            if (frequency[freqIndex[i]] < frequency[freqIndex[j]]) {
+                int temp = freqIndex[i];
+                freqIndex[i] = freqIndex[j];
+                freqIndex[j] = temp;
+            }
+        }
+    }
+
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        sortedLetters[i] = 'A' + freqIndex[i];
+    }
+}
+
+// Function to generate possible plaintexts based on frequency analysis
+void frequencyAttack(char *ciphertext, int topN) {
+    int freq[ALPHABET_SIZE];
+    char sortedLetters[ALPHABET_SIZE];
+    char mostFrequent[ALPHABET_SIZE] = "ETAOINSHRDLCUMWFGYPBVKJXQZ"; // Common letter frequencies in English
+
+    int length = strlen(ciphertext);
+
+    // Calculate frequency of each letter in the ciphertext
+    calculateFrequency(ciphertext, freq);
+
+    // Sort letters based on frequency
+    sortFrequency(freq, sortedLetters);
+
+    printf("Letter frequencies in the ciphertext:\n");
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        printf("%c: %d\n", 'A' + sortedLetters[i] - 'A', freq[sortedLetters[i] - 'A']);
+    }
+
+    // Generate possible plaintexts
+    printf("\nPossible plaintexts (top %d guesses):\n", topN);
+    for (int shift = 0; shift < ALPHABET_SIZE; shift++) {
+        char substitution[ALPHABET_SIZE];
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+            substitution[sortedLetters[i] - 'A'] = mostFrequent[(i + shift) % ALPHABET_SIZE];
+        }
+
+        char plaintext[MAX_LEN];
+        for (int i = 0; i < length; i++) {
+            if (isalpha(ciphertext[i])) {
+                int index = toupper(ciphertext[i]) - 'A';
+                plaintext[i] = substitution[index];
+            } else {
+                plaintext[i] = ciphertext[i];
+            }
+        }
+        plaintext[length] = '\0';
+
+        printf("Shift %2d: %s\n", shift, plaintext);
+
+        // Stop after the top N guesses
+        if (shift + 1 >= topN) {
+            break;
+        }
+    }
+}
+
+int main() {
+    char ciphertext[MAX_LEN];
+
+    printf("Enter the ciphertext: ");
+    fgets(ciphertext, MAX_LEN, stdin);
+    // Remove the newline character at the end if present
+    ciphertext[strcspn(ciphertext, "\n")] = '\0';
+
+    frequencyAttack(ciphertext, TOP_N);
+
+    return 0;
+}
