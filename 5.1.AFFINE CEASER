@@ -1,0 +1,87 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+// Function to compute the greatest common divisor
+int gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+// Function to check if a is valid
+int isValidA(int a) {
+    return gcd(a, 26) == 1;
+}
+
+// Function to encrypt using affine cipher
+char affineEncrypt(char p, int a, int b) {
+    if (isalpha(p)) {
+        char offset = isupper(p) ? 'A' : 'a';
+        return ((a * (p - offset) + b) % 26 + offset);
+    }
+    return p; // Non-alphabetic characters remain unchanged
+}
+
+// Function to decrypt using affine cipher
+char affineDecrypt(char c, int a, int b) {
+    if (isalpha(c)) {
+        char offset = isupper(c) ? 'A' : 'a';
+        // Find modular inverse of a
+        int a_inv = 0;
+        for (int i = 1; i < 26; i++) {
+            if ((a * i) % 26 == 1) {
+                a_inv = i;
+                break;
+            }
+        }
+        return ((a_inv * ((c - offset - b + 26) % 26)) % 26 + offset);
+    }
+    return c; // Non-alphabetic characters remain unchanged
+}
+
+int main() {
+    char plaintext[100], ciphertext[100];
+    int a, b;
+
+    // Input the plaintext to be encrypted
+    printf("Enter a message to encrypt: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+    plaintext[strcspn(plaintext, "\n")] = 0; // Remove newline character
+
+    // Input the values of a and b
+    printf("Enter the value of a: ");
+    scanf("%d", &a);
+    printf("Enter the value of b: ");
+    scanf("%d", &b);
+
+    // Check if the value of a is valid
+    if (!isValidA(a)) {
+        printf("Invalid value of a. It must be coprime with 26.\n");
+        return 1;
+    }
+
+    // Encrypt the plaintext using affine cipher
+    for (int i = 0; plaintext[i] != '\0'; i++) {
+        ciphertext[i] = affineEncrypt(plaintext[i], a, b);
+    }
+    ciphertext[strlen(plaintext)] = '\0';
+
+    // Output the encrypted text
+    printf("Encrypted message: %s\n", ciphertext);
+
+    // Decrypt the ciphertext to verify
+    char decryptedtext[100];
+    for (int i = 0; ciphertext[i] != '\0'; i++) {
+        decryptedtext[i] = affineDecrypt(ciphertext[i], a, b);
+    }
+    decryptedtext[strlen(ciphertext)] = '\0';
+
+    // Output the decrypted text
+    printf("Decrypted message: %s\n", decryptedtext);
+
+    return 0;
+}
