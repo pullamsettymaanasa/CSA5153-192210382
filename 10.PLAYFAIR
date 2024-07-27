@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 5
+
+void generatePlayfairMatrix(char matrix[SIZE][SIZE]) {
+    // Matrix is predefined as given in the problem
+    char predefined[SIZE][SIZE] = {
+        {'M', 'F', 'H', 'I', 'K'},
+        {'U', 'N', 'O', 'P', 'Q'},
+        {'Z', 'V', 'W', 'X', 'Y'},
+        {'E', 'L', 'A', 'R', 'G'},
+        {'D', 'S', 'T', 'B', 'C'}
+    };
+
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            matrix[i][j] = predefined[i][j];
+        }
+    }
+}
+
+void findPosition(char matrix[SIZE][SIZE], char ch, int* row, int* col) {
+    if (ch == 'J') ch = 'I'; // Treat 'J' as 'I'
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            if (matrix[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+void prepareText(const char* text, char* preparedText) {
+    int j = 0;
+    for (int i = 0; i < strlen(text); i++) {
+        if (isalpha(text[i])) {
+            char ch = toupper(text[i]);
+            if (ch == 'J') ch = 'I'; // Treat 'J' as 'I'
+            if (j > 0 && preparedText[j - 1] == ch) {
+                preparedText[j++] = 'X'; // Insert 'X' between duplicate letters
+            }
+            preparedText[j++] = ch;
+        }
+    }
+    if (j % 2 != 0) {
+        preparedText[j++] = 'X'; // Append 'X' if text length is odd
+    }
+    preparedText[j] = '\0';
+}
+
+void encryptDigraph(char matrix[SIZE][SIZE], char digraph[2], char* encrypted) {
+    int row1, col1, row2, col2;
+    findPosition(matrix, digraph[0], &row1, &col1);
+    findPosition(matrix, digraph[1], &row2, &col2);
+
+    if (row1 == row2) {
+        encrypted[0] = matrix[row1][(col1 + 1) % SIZE];
+        encrypted[1] = matrix[row2][(col2 + 1) % SIZE];
+    } else if (col1 == col2) {
+        encrypted[0] = matrix[(row1 + 1) % SIZE][col1];
+        encrypted[1] = matrix[(row2 + 1) % SIZE][col2];
+    } else {
+        encrypted[0] = matrix[row1][col2];
+        encrypted[1] = matrix[row2][col1];
+    }
+}
+
+void encryptPlayfairCipher(const char* plaintext, char* ciphertext) {
+    char matrix[SIZE][SIZE];
+    generatePlayfairMatrix(matrix);
+
+    char preparedText[100];
+    prepareText(plaintext, preparedText);
+
+    int length = strlen(preparedText);
+    for (int i = 0; i < length; i += 2) {
+        char digraph[2] = { preparedText[i], preparedText[i + 1] };
+        char encrypted[2];
+        encryptDigraph(matrix, digraph, encrypted);
+        ciphertext[i] = encrypted[0];
+        ciphertext[i + 1] = encrypted[1];
+    }
+    ciphertext[length] = '\0';
+}
+
+int main() {
+    const char* plaintext = "Must see you over Cadogan West. Coming at once.";
+    char ciphertext[100];
+
+    encryptPlayfairCipher(plaintext, ciphertext);
+    printf("Encrypted message: %s\n", ciphertext);
+
+    return 0;
+}
