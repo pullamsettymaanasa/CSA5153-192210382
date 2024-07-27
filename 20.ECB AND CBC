@@ -1,0 +1,52 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <openssl/des.h>  // OpenSSL DES library
+
+// ECB Encryption function
+void ecb_encrypt(const uint8_t *plaintext, uint8_t *ciphertext, size_t length, DES_key_schedule *ks) {
+    uint8_t block[8];
+    for (size_t i = 0; i < length; i += 8) {
+        memcpy(block, plaintext + i, 8);
+        DES_ecb_encrypt((DES_cblock *)block, (DES_cblock *)block, ks, DES_ENCRYPT);
+        memcpy(ciphertext + i, block, 8);
+    }
+}
+
+// CBC Encryption function
+void cbc_encrypt(const uint8_t *plaintext, uint8_t *ciphertext, size_t length, DES_key_schedule *ks, const uint8_t *iv) {
+    uint8_t block[8], iv_copy[8];
+    memcpy(iv_copy, iv, 8);
+    for (size_t i = 0; i < length; i += 8) {
+        memcpy(block, plaintext + i, 8);
+        for (int j = 0; j < 8; ++j) block[j] ^= iv_copy[j];
+        DES_ecb_encrypt((DES_cblock *)block, (DES_cblock *)block, ks, DES_ENCRYPT);
+        memcpy(ciphertext + i, block, 8);
+        memcpy(iv_copy, ciphertext + i, 8);
+    }
+}
+
+int main() {
+    // Example plaintext and key
+    uint8_t plaintext[16] = "abcdefgh12345678";
+    uint8_t ciphertext_ecb[16], ciphertext_cbc[16];
+    uint8_t iv[8] = {0};  // Initialization vector for CBC
+
+    DES_cblock key = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
+    DES_key_schedule ks;
+    DES_set_key_unchecked(&key, &ks);
+
+    // Encrypt using ECB mode
+    ecb_encrypt(plaintext, ciphertext_ecb, 16, &ks);
+    printf("ECB ciphertext (hex):\n");
+    for (size_t i = 0; i < 16; ++i) printf("%02X", ciphertext_ecb[i]);
+    printf("\n");
+
+    // Encrypt using CBC mode
+    cbc_encrypt(plaintext, ciphertext_cbc, 16, &ks, iv);
+    printf("CBC ciphertext (hex):\n");
+    for (size_t i = 0; i < 16; ++i) printf("%02X", ciphertext_cbc[i]);
+    printf("\n");
+
+    return 0;
+}
