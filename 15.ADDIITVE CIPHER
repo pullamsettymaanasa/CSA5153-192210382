@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define ALPHABET_SIZE 26
+#define TOP_N 10
+#define MAX_LEN 1000
+
+// Function to calculate the frequency of each letter in the ciphertext
+void calculateFrequency(char *text, int *frequency) {
+    for (int i = 0; text[i] != '\0'; i++) {
+        if (isalpha(text[i])) {
+            int index = toupper(text[i]) - 'A';
+            frequency[index]++;
+        }
+    }
+}
+
+// Function to perform a frequency analysis attack
+void frequencyAttack(char *ciphertext, int topN) {
+    int freq[ALPHABET_SIZE] = {0};
+    int length = strlen(ciphertext);
+
+    // Calculate frequency of each letter in the ciphertext
+    calculateFrequency(ciphertext, freq);
+
+    // Output frequencies for reference
+    printf("Letter frequencies in the ciphertext:\n");
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        printf("%c: %d\n", 'A' + i, freq[i]);
+    }
+
+    // Generate possible plaintexts for each shift value
+    printf("\nPossible plaintexts (top %d guesses):\n", topN);
+    for (int shift = 0; shift < ALPHABET_SIZE; shift++) {
+        char plaintext[MAX_LEN];
+        for (int i = 0; i < length; i++) {
+            if (isalpha(ciphertext[i])) {
+                int shiftValue = (toupper(ciphertext[i]) - 'A' - shift + ALPHABET_SIZE) % ALPHABET_SIZE;
+                plaintext[i] = 'A' + shiftValue;
+            } else {
+                plaintext[i] = ciphertext[i];
+            }
+        }
+        plaintext[length] = '\0';
+
+        // Print the plaintext for each shift
+        printf("Shift %2d: %s\n", shift, plaintext);
+
+        // Stop after the top N guesses
+        if (shift + 1 >= topN) {
+            break;
+        }
+    }
+}
+
+int main() {
+    char ciphertext[MAX_LEN];
+    
+    printf("Enter the ciphertext: ");
+    fgets(ciphertext, MAX_LEN, stdin);
+    // Remove the newline character at the end if present
+    ciphertext[strcspn(ciphertext, "\n")] = '\0';
+
+    frequencyAttack(ciphertext, TOP_N);
+
+    return 0;
+}
