@@ -1,0 +1,61 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+// Function to encrypt the text using Monoalphabetic Substitution cipher
+void monoalphabeticCipher(char* text, char* key) {
+    int i;
+    char ch;
+
+    for (i = 0; text[i] != '\0'; ++i) {
+        ch = text[i];
+
+        if (isalpha(ch)) {
+            // Encrypt uppercase letters
+            if (isupper(ch)) {
+                text[i] = toupper(key[ch - 'A']);
+            }
+            // Encrypt lowercase letters
+            else {
+                text[i] = tolower(key[ch - 'a']);
+            }
+        }
+    }
+}
+
+int main() {
+    char text[100];
+    char key[27]; // 26 letters + null terminator
+
+    // Input the text to be encrypted
+    printf("Enter a message to encrypt: ");
+    gets(text);
+
+    // Input the substitution key
+    printf("Enter the 26-letter substitution key: ");
+    gets(key);
+
+    // Validate the key length and uniqueness
+    if (strlen(key) != 26) {
+        printf("Invalid key! The key must be exactly 26 letters long.\n");
+        return 1;
+    }
+    
+    // Check for unique characters in the key
+    for (int i = 0; i < 26; i++) {
+        for (int j = i + 1; j < 26; j++) {
+            if (tolower(key[i]) == tolower(key[j])) {
+                printf("Invalid key! The key must contain 26 unique letters.\n");
+                return 1;
+            }
+        }
+    }
+
+    // Encrypt the text using the Monoalphabetic Substitution cipher
+    monoalphabeticCipher(text, key);
+
+    // Output the encrypted text
+    printf("Encrypted message: %s\n", text);
+
+    return 0;
+}
